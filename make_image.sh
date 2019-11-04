@@ -13,7 +13,8 @@ convert \
   -pointsize 80 \
   -bordercolor Black \
   -border 20x0 \
-  label:"$OUT" \
+  -style Italic \
+  label:"\“$OUT\”" \
   image.png
 
 convert \
