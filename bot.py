@@ -36,12 +36,15 @@ def get_user_pic(user: User):
     photo_size = photos[0][-1]
     photo = photo_size.get_file().download_as_bytearray()
 
-    return (photo, (photo_size.width, photo_size.height))
+    name = user.first_name.split(" ")
+    formated_name = name[1].upper() + ", " + name[0]
+
+    return (photo, (photo_size.width, photo_size.height), formated_name)
 
 
-def apply_overlay(n, photo, quote):
+def apply_overlay(n, photo, quote, name):
     result = 'result-{n}.jpg'.format(n=n)
-    command = f'./make_image.sh "{quote}" "{photo}" "{result}"'
+    command = f'./make_image.sh "{quote}" "{name}" "{photo}" "{result}"'
     subprocess.call(shlex.split(command))
 
     return result
@@ -54,14 +57,14 @@ def make_quote(bot, update):
         update.message.reply_text('Use /quote em reposta a uma mensagem.')
         return
 
-    pic, size = get_user_pic(update.message.reply_to_message.from_user)
+    pic, size, name = get_user_pic(update.message.reply_to_message.from_user)
     n = random.randint(1, 1000)
     file_name = 'user-{n}.jpg'.format(n=n)
     open(file_name, 'wb').write(pic)
 
     quote = update['message']['reply_to_message']['text']
 
-    result = apply_overlay(n, file_name, quote)
+    result = apply_overlay(n, file_name, quote, name)
 
     update.message.reply_photo(photo=open(result, 'rb'))
 
