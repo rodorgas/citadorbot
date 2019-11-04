@@ -14,7 +14,7 @@ convert \
   -bordercolor Black \
   -border 20x0 \
   -style Italic \
-  label:"\"$OUT\"" \
+  label:"\“$OUT\”" \
   image.png
 
 convert \
