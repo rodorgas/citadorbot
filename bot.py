@@ -36,8 +36,9 @@ def get_user_pic(user: User):
     photo_size = photos[0][-1]
     photo = photo_size.get_file().download_as_bytearray()
 
-    name = user.first_name.split(" ")
-    formated_name = name[1].upper() + ", " + name[0]
+    name = user.first_name + " " + user.last_name if user.last_name else user.first_name
+    name = name.split(" ")
+    formated_name = name[1].upper() + ", " + name[0] if len(name) > 1 else name[0]
 
     return (photo, (photo_size.width, photo_size.height), formated_name)
 
