@@ -3,17 +3,24 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, \
                          Filters
 from telegram import User
+from dotenv import load_dotenv
+
 import logging
 import shlex
 import subprocess
 import random
 import os
 
+
+load_dotenv()
+TOKEN = os.getenv("CITADOR_TOKEN")
+
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+
 
 def start(bot, update):
     """Send a message when the command /start is issued."""
@@ -70,7 +77,7 @@ def error(bot, update, error):
 def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("987204899:AAGWMFVEjyQwwo6n_sGjjUkrRN_Aid1qUSY")
+    updater = Updater(TOKEN)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
