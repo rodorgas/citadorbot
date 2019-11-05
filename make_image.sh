@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
 # ./make_image.sh "quote" "name" "profile.jpg" "result.jpg"
 
-OUT=`python3 wordwrap.py "$1"`
-
-echo "$OUT"
+QUOTE=`python3 wordwrap.py "$1"`
+NAME=$2
+PROFILE=$3
+RESULT=$4
 
 convert \
   -background black \
@@ -12,10 +13,10 @@ convert \
   -font "Arial" \
   -pointsize 80 \
   -bordercolor Black \
-  -border 30x0 \
+  -border 30x10 \
   -style Italic \
-  label:"\“$OUT\”" \
-  quote.png
+  label:"\“$QUOTE\” " \
+  "${RESULT}-quote.png"
 
 convert \
   -background black \
@@ -24,31 +25,35 @@ convert \
   -pointsize 40 \
   -bordercolor Black \
   -border 30x10 \
-  label:"$2" \
-  name.png
+  label:"$NAME" \
+  "${RESULT}-name.png"
 
 convert \
   -background black \
    xc:none \
-   quote.png -append \
-   name.png \
+  "${RESULT}-quote.png" -append \
+  "${RESULT}-name.png" \
   -gravity SouthEast \
   -append \
   +repage \
   -colorspace Gray \
   -bordercolor Black \
   -border 20x20 \
-  image.png
+  "${RESULT}-namequote.png"
 
 convert \
   -background black \
    xc:none \
-   image.png -append \
-   "$3" \
+  "${RESULT}-namequote.png" -append \
+   "$PROFILE" \
   -gravity center \
   +append \
   +repage \
   -colorspace Gray \
   -bordercolor Black \
   -border 20x20 \
-  "$4"
+  "$RESULT"
+
+rm "${RESULT}-quote.png"
+rm "${RESULT}-name.png"
+rm "${RESULT}-namequote.png"

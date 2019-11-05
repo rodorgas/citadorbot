@@ -44,9 +44,9 @@ def get_user_pic(user: User):
 
 
 def apply_overlay(n, photo, quote, name):
-    result = 'result-{n}.jpg'.format(n=n)
-    command = f'./make_image.sh "{quote}" "{name}" "{photo}" "{result}"'
-    subprocess.call(shlex.split(command))
+    result = f'result-{n}.jpg'
+    command = ['bash', 'make_image.sh', quote, name, photo, result]
+    subprocess.call(command)
 
     return result
 
@@ -60,7 +60,7 @@ def make_quote(bot, update):
 
     pic, size, name = get_user_pic(update.message.reply_to_message.from_user)
     n = random.randint(1, 1000)
-    file_name = 'user-{n}.jpg'.format(n=n)
+    file_name = f'user-{n}.jpg'
     open(file_name, 'wb').write(pic)
 
     quote = update['message']['reply_to_message']['text']
