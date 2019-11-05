@@ -1,3 +1,4 @@
 venv
 *.jpg
 .env
+__pycache__
