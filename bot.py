@@ -54,16 +54,25 @@ def apply_overlay(n, photo, quote, name):
 def make_quote(bot, update):
     print('quote ' + update.effective_user.username)
 
-    if update['message']['reply_to_message'] is None:
-        update.message.reply_text('Use /quote em reposta a uma mensagem.')
-        return
+    if update['message']['forward_from'] is not None:
+        if update['message']['chat']['type'] == 'group':
+            return
+        pic, size, name = get_user_pic(update.message.forward_from)
+        quote = update['message']['text']
+    else:
+        if update['message']['reply_to_message'] is None:
+            update.message.reply_text('Use /quote em reposta a uma mensagem.')
+            return
 
-    pic, size, name = get_user_pic(update.message.reply_to_message.from_user)
+        if update['message']['reply_to_message']['forward_from'] is not None:
+            pic, size, name = get_user_pic(update.message.reply_to_message.forward_from)
+        else:
+            pic, size, name = get_user_pic(update.message.reply_to_message.from_user)
+        quote = update['message']['reply_to_message']['text']
+
     n = random.randint(1, 1000)
     file_name = f'user-{n}.jpg'
     open(file_name, 'wb').write(pic)
-
-    quote = update['message']['reply_to_message']['text']
 
     result = apply_overlay(n, file_name, quote, name)
 
@@ -89,6 +98,7 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("quote", make_quote))
+    dp.add_handler(MessageHandler(Filters.forwarded, make_quote))
 
     # log all errors
     dp.add_error_handler(error)

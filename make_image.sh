@@ -7,10 +7,12 @@ NAME=$2
 PROFILE=$3
 RESULT=$4
 
+echo `date`
+
 convert \
   -background black \
   -fill white \
-  -font "Arial" \
+  -font "Noto Color Emoji" \
   -pointsize 80 \
   -bordercolor Black \
   -border 30x10 \
