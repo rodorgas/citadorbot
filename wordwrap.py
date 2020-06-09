@@ -3,7 +3,7 @@ import textwrap
 
 
 def wrap(text):
-    result = textwrap.wrap(text, width=30)
+    result = textwrap.wrap(text, width=30, replace_whitespace=False)
     print('\n'.join(result))
 
 if __name__ == '__main__':

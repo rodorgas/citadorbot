@@ -1,8 +1,5 @@
 #!/bin/bash
-
 # ./make_image.sh "quote" "name" "profile.jpg" "result.jpg"
-
-set -e
 
 QUOTE=`python3 wordwrap.py "$1"`
 NAME=$2
@@ -14,16 +11,18 @@ echo `date`
 convert \
   -background black \
   -fill white \
+  -font "Twitter-Color-Emoji-SVGinOT" \
   -pointsize 80 \
   -bordercolor Black \
   -border 30x10 \
   -style Italic \
-  pango:"<span font=\"Twitter-Color-Emoji-SVGinOT\"><i>\“$QUOTE\”</i></span>" \
+  pango:"<span font=\"Twitter-Color-Emoji-SVGinOT\">\“$QUOTE\”</span>" \
   "${RESULT}-quote.png"
 
 convert \
   -background black \
   -fill white \
+  -font "Arial" \
   -pointsize 40 \
   -bordercolor Black \
   -border 30x10 \
@@ -38,28 +37,10 @@ convert \
   -gravity SouthEast \
   -append \
   +repage \
-  -bordercolor Black \
-  -border 20x20 \
-  "${RESULT}-namequote.png"
-
-convert \
-  "$PROFILE" \
   -colorspace Gray \
-  "$PROFILE-black.png"
-
-convert \
-  -background black \
-   xc:none \
-  "${RESULT}-namequote.png" -append \
-   "$PROFILE-black.png" \
-  -gravity center \
-  +append \
-  +repage \
   -bordercolor Black \
   -border 20x20 \
-  "$RESULT"
+  "${RESULT}"
 
 rm "${RESULT}-quote.png"
 rm "${RESULT}-name.png"
-rm "${RESULT}-namequote.png"
-rm "${PROFILE}-black.png"
