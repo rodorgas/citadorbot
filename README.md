@@ -10,7 +10,7 @@ most remarkable sayings.
 See it in action:
 
 <p align="center">
-    <img alt="screenshot" src="screenshot" width="450">
+    <img alt="screenshot" src="screenshot.png" width="450">
 </p>
 
 ## Development
