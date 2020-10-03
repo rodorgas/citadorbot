@@ -1,6 +1,6 @@
 # CitadorBot
 
-A bot on Telegram ([@CitadorBot](https://t.me/citadorbot)) that create
+A bot on Telegram ([@CitadorBot](https://t.me/citadorbot)) that creates
 an image based on someone's quote.
 
 To use it, just forward a message to the bot and reply the message with
@@ -12,3 +12,8 @@ See it in action:
 <p align="center">
     <img alt="screenshot" src="screenshot" width="450">
 </p>
+
+## Development
+
+Please check the [CONTRIBUTING](CONTRIBUTING.md) document.
+
