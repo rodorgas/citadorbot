@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def start(bot, update):
     """Send a message when the command /start is issued."""
-    update.message.reply_text('Olá! Use o comando /quote em resposta a uma mensagem')
+    update.message.reply_text('Olá! Use o comando /quote em resposta a uma mensagem ou /fake_quote para criar uma citação fake')
 
 def format_name(name):
     return name[1].upper() + ", " + name[0] if len(name) > 1 else name[0]
@@ -87,7 +87,7 @@ def make_fake_quote(bot, update):
     splitted_text = update['message']['text'].split()
 
     if len(splitted_text) < 5:
-        update.message.reply_text('Use /fake_quote <url da imagem> <nome> <sobrenome> <frase>.')
+        update.message.reply_text('Use /fake_quote <url da imagem> <nome> <sobrenome> <frase>')
         return
 
     url = splitted_text[1]
