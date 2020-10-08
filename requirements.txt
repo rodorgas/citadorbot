@@ -16,3 +16,4 @@ six==1.15.0
 tornado==6.0.4
 urllib3==1.25.10
 validator-collection==1.4.2
+pillow==7.2.0

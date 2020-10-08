@@ -12,6 +12,7 @@ import subprocess
 import random
 import os
 import requests
+import make_image
 
 load_dotenv()
 TOKEN = os.getenv("CITADOR_TOKEN")
