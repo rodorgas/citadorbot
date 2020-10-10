@@ -63,20 +63,30 @@ def get_pic_from_url(url, update):
 
     return (image, (500, 500))
 
-def apply_overlay(n, photo, quote, name, fake_quote=False):
+
+def apply_overlay(n, photo, quote, name, context, fake_quote=False):
     result = f'result-{n}.jpg'
 
     if fake_quote:
         script = 'make_image_fake_quote.sh'
         fake_mark = "Esta é uma falsa citação gerada com /fake_quote"
         command = ['bash', script, quote, name, photo, fake_mark, result]
-    elif photo:
-        script = 'make_image.sh'
-        command = ['bash', script, quote, name, photo, result]
+    if photo:
+        if context:
+            script = 'make_image_with_context.sh'
+        else:
+            script = 'make_image.sh'
+            context = 'None'
     else:
-        script = 'make_image_noprofile.sh'
-        photo = 'None'
-        command = ['bash', script, quote, name, photo, result]
+        if context:
+            script = 'make_image_noprofile_with_context.sh'
+            photo = 'None'
+        else:
+            script = 'make_image_noprofile.sh'
+            photo = 'None'
+            context = 'None'
+
+    command = ['bash', script, quote, name, context, photo, result]
 
     subprocess.call(command)
 
@@ -107,7 +117,7 @@ def make_fake_quote(bot, update):
 
     file_name = f'image-{n}.jpg'
     open(file_name, 'wb').write(photo[0])
-    result = apply_overlay(n, file_name, joined_quote, formatted_name, fake_quote)
+    result = apply_overlay(n, file_name, joined_quote, formatted_name, False, fake_quote)
 
     update.message.reply_photo(photo=open(result, 'rb'))
 
@@ -117,7 +127,10 @@ def make_fake_quote(bot, update):
 
 def make_quote(bot, update):
     print('quote ' + update.effective_user.username)
-
+    if len(result := update['message']['text'].split(' ', 1)) > 1 and update['message']['forward_from'] is None:
+        context = result[-1]
+    else:
+        context = None
     if update['message']['forward_from'] is not None:
         if update['message']['chat']['type'] == 'group':
             return
@@ -144,7 +157,7 @@ def make_quote(bot, update):
     else:
         name = user_pic
 
-    result = apply_overlay(n, file_name, quote, name)
+    result = apply_overlay(n, file_name, quote, name, context)
 
     update.message.reply_photo(photo=open(result, 'rb'))
 

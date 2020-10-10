@@ -1,10 +1,10 @@
 #!/bin/bash
-# ./make_image.sh "quote" "name" "profile.jpg" "result.jpg"
+# ./make_image.sh "quote" "name" "context" "profile.jpg" "result.jpg"
 
 QUOTE=`python3 wordwrap.py "$1"`
 NAME=$2
-PROFILE=$3
-RESULT=$4
+PROFILE=$4
+RESULT=$5
 
 echo `date`
 

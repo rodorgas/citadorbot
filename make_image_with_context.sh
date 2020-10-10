@@ -6,6 +6,7 @@ set -e
 
 QUOTE=`python3 wordwrap.py "$1"`
 NAME=$2
+CONTEXT=$3
 PROFILE=$4
 RESULT=$5
 
@@ -30,6 +31,16 @@ convert \
   label:"$NAME" \
   "${RESULT}-name.png"
 
+
+convert \
+  -background black \
+  -fill white \
+  -pointsize 40 \
+  -bordercolor Black \
+  -border 30x10 \
+  label:"$CONTEXT" \
+  "${RESULT}-context.png"
+
 convert \
   -background black \
    xc:none \
@@ -42,6 +53,19 @@ convert \
   -border 20x20 \
   "${RESULT}-namequote.png"
 
+  convert \
+  -background black \
+   xc:none \
+  "${RESULT}-namequote.png" -append \
+  "${RESULT}-context.png" \
+  -gravity SouthWest \
+  -append \
+  +repage \
+  -bordercolor Black \
+  -border 20x20 \
+  "${RESULT}-namequotecontext.png"
+
+
 convert \
   "$PROFILE" \
   -colorspace Gray \
@@ -50,7 +74,7 @@ convert \
 convert \
   -background black \
    xc:none \
-  "${RESULT}-namequote.png" -append \
+  "${RESULT}-namequotecontext.png" -append \
    "$PROFILE-black.png" \
   -gravity center \
   +append \
@@ -62,4 +86,6 @@ convert \
 rm "${RESULT}-quote.png"
 rm "${RESULT}-name.png"
 rm "${RESULT}-namequote.png"
+rm "${RESULT}-context.png"
+rm "${RESULT}-namequotecontext.png"
 rm "${PROFILE}-black.png"
