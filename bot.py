@@ -127,8 +127,8 @@ def make_fake_quote(bot, update):
 
 def make_quote(bot, update):
     print('quote ' + update.effective_user.username)
-    if len(update['message']['text'].split(" ", 1)) > 1 and '/quote' in update['message']['text']:
-        context = context = update['message']['text'].split(" ", 1)[-1]
+    if len(result := update['message']['text'].split(' ', 1)) > 1 and update['message']['forward_from'] is None:
+        context = result[-1]
     else:
         context = None
     if update['message']['forward_from'] is not None:
