@@ -17,7 +17,7 @@ convert \
   -bordercolor Black \
   -border 30x10 \
   -style Italic \
-  pango:"<span font=\"Twitter-Color-Emoji-SVGinOT\">\“$QUOTE\”</span>" \
+  label:"\“$QUOTE\”" \
   "${RESULT}-quote.png"
 
 convert \
