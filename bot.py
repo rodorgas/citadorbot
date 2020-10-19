@@ -12,7 +12,6 @@ import subprocess
 import random
 import os
 import requests
-import make_image
 
 load_dotenv()
 TOKEN = os.getenv("CITADOR_TOKEN")
@@ -52,9 +51,26 @@ def get_pic_from_url(url, update):
         update.message.reply_text('Use um URL válido')
         return None
 
-def apply_overlay(n, photo, quote, name, context):
+    response = requests.get(url)
+    valid_content_types = ['image/jpeg', 'image/png']
+
+    if not response.headers['content-type'] in valid_content_types:
+        update.message.reply_text('O URL deve ser de uma imagem jpeg ou png.')
+        return None
+
+
+    image = response.content
+
+    return (image, (500, 500))
+
+
+def apply_overlay(n, photo, quote, name, context, fake_quote=False):
     result = f'result-{n}.jpg'
 
+    if fake_quote:
+        script = 'make_image_fake_quote.sh'
+        fake_mark = "Esta é uma falsa citação gerada com /fake_quote"
+        command = ['bash', script, quote, name, photo, fake_mark, result]
     if photo:
         if context:
             script = 'make_image_with_context.sh'
@@ -71,6 +87,7 @@ def apply_overlay(n, photo, quote, name, context):
             context = 'None'
 
     command = ['bash', script, quote, name, context, photo, result]
+
     subprocess.call(command)
 
     return result
@@ -100,7 +117,7 @@ def make_fake_quote(bot, update):
 
     file_name = f'image-{n}.jpg'
     open(file_name, 'wb').write(photo[0])
-    result = apply_overlay(n, file_name, joined_quote, formatted_name, fake_quote)
+    result = apply_overlay(n, file_name, joined_quote, formatted_name, False, fake_quote)
 
     update.message.reply_photo(photo=open(result, 'rb'))
 

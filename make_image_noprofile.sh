@@ -1,19 +1,10 @@
 #!/bin/bash
-<<<<<<< HEAD
-# ./make_image.sh "quote" "name" "profile.jpg" "result.jpg"
-
-QUOTE=`python3 wordwrap.py "$1"`
-NAME=$2
-PROFILE=$3
-RESULT=$4
-=======
 # ./make_image.sh "quote" "name" "context" "profile.jpg" "result.jpg"
 
 QUOTE=`python3 wordwrap.py "$1"`
 NAME=$2
 PROFILE=$4
 RESULT=$5
->>>>>>> a251422... Add context to quotes
 
 echo `date`
 
