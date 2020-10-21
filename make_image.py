@@ -88,7 +88,7 @@ def get_concat_horizontal(
         margin (int, optional): space around images. Defaults to MARGIN.
         padding (int, optional): space between content image and borders. Defaults to PADDING.
         align (str, optional): align images horizontally (top, center, bottom). Defaults to "center".
-        background_color (tuple = (r, g, b), optinal): background color. Defaults to BACKGROUND_COLOR.
+        background_color (tuple = (r, g, b), optional): background color. Defaults to BACKGROUND_COLOR.
     Returns:
         Image: The result image object of the concatenation
     """
