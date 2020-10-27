@@ -171,8 +171,8 @@ def make_image_quote(photo: str, quote: str, name: str, result: str):
     with make_image.Image.open(photo) as img:
         quote = "“{}”".format(quote)
         img = img.convert("L")
-        img_caption = make_image.text_image(quote)
-        img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=20)
+        img_caption = make_image.text_image(quote, padding=25)
+        img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
         img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
         img_quote = make_image.get_concat_horizontal(img_text, img, resize=img.height < img_text.height)
         img_quote.save(result)
@@ -180,8 +180,8 @@ def make_image_quote(photo: str, quote: str, name: str, result: str):
 
 def make_image_noprofile_quote(quote: str, name: str, result:  str):
     quote = '“{}”'.format(quote)
-    img_caption = make_image.text_image(quote)
-    img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=20)
+    img_caption = make_image.text_image(quote, padding=25)
+    img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
     img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
     img_text.save(result)
 
