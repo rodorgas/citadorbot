@@ -73,18 +73,11 @@ def apply_overlay(n, photo, quote, name, context, fake_quote=False):
         fake_mark = "Esta é uma falsa citação gerada com /fake_quote"
         command = ['bash', script, quote, name, photo, fake_mark, result]
     if photo:
-        if context:
-            script = 'make_image_with_context.sh'
-        else:
-            make_image_quote(photo, quote, name, result)
-            return result
+        make_image_quote(photo, quote, name, context, result)
+        return result
     else:
-        if context:
-            script = 'make_image_noprofile_with_context.sh'
-            photo = 'None'
-        else:
-            make_image_noprofile_quote(quote, name, result)
-            return result
+        make_image_noprofile_quote(quote, name, context, result)
+        return result
 
     command = ['bash', script, quote, name, context, photo, result]
 
@@ -166,7 +159,7 @@ def make_quote(bot, update):
     os.remove(result)
 
 
-def make_image_quote(photo: str, quote: str, name: str, result: str):
+def make_image_quote(photo: str, quote: str, name: str, context: str, result: str):
 
     with make_image.Image.open(photo) as img:
         quote = "“{}”".format(quote)
@@ -174,15 +167,21 @@ def make_image_quote(photo: str, quote: str, name: str, result: str):
         img_caption = make_image.text_image(quote, padding=25)
         img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
         img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
+        if context is not None:
+            img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
+            img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
         img_quote = make_image.get_concat_horizontal(img_text, img, resize=img.height < img_text.height)
         img_quote.save(result)
 
 
-def make_image_noprofile_quote(quote: str, name: str, result:  str):
+def make_image_noprofile_quote(quote: str, name: str, context: str, result:  str):
     quote = '“{}”'.format(quote)
     img_caption = make_image.text_image(quote, padding=25)
     img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
     img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
+    if context is not None:
+            img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
+            img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
     img_text.save(result)
 
 
