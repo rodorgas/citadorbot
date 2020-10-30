@@ -16,6 +16,7 @@ import make_image
 
 load_dotenv()
 TOKEN = os.getenv("CITADOR_TOKEN")
+FAKE_MARK = "Esta é uma falsa citação gerada com /fake_quote"
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -68,22 +69,15 @@ def get_pic_from_url(url, update):
 def apply_overlay(n, photo, quote, name, context, fake_quote=False):
     result = f'result-{n}.jpg'
 
-    if fake_quote:
-        script = 'make_image_fake_quote.sh'
-        fake_mark = "Esta é uma falsa citação gerada com /fake_quote"
-        command = ['bash', script, quote, name, photo, fake_mark, result]
     if photo:
-        make_image_quote(photo, quote, name, context, result)
+        make_image_quote(photo, quote, name, context, result, fake_quote)
         return result
     else:
         make_image_noprofile_quote(quote, name, context, result)
         return result
 
-    command = ['bash', script, quote, name, context, photo, result]
-
-    subprocess.call(command)
-
     return result
+
 
 def make_fake_quote(bot, update):
     print('fake_quote ' + update.effective_user.username)
@@ -110,7 +104,7 @@ def make_fake_quote(bot, update):
 
     file_name = f'image-{n}.jpg'
     open(file_name, 'wb').write(photo[0])
-    result = apply_overlay(n, file_name, joined_quote, formatted_name, False, fake_quote)
+    result = apply_overlay(n, file_name, joined_quote, formatted_name, None, fake_quote)
 
     update.message.reply_photo(photo=open(result, 'rb'))
 
@@ -159,7 +153,14 @@ def make_quote(bot, update):
     os.remove(result)
 
 
-def make_image_quote(photo: str, quote: str, name: str, context: str, result: str):
+def make_image_quote(
+    photo: str,
+    quote: str,
+    name: str,
+    context: str,
+    result: str,
+    fake_quote: bool=False
+    ):
 
     with make_image.Image.open(photo) as img:
         quote = "“{}”".format(quote)
@@ -167,6 +168,11 @@ def make_image_quote(photo: str, quote: str, name: str, context: str, result: st
         img_caption = make_image.text_image(quote, padding=25)
         img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
         img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
+
+        if fake_quote:
+            img_fake = make_image.text_image(FAKE_MARK, font_size=int(make_image.FONT_SIZE * 0.4), padding=25)
+            img_text = make_image.get_concat_vertical(img_text, img_fake, align="right")
+
         if context is not None:
             img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
             img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
@@ -183,7 +189,6 @@ def make_image_noprofile_quote(quote: str, name: str, context: str, result:  str
             img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
             img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
     img_text.save(result)
-
 
 
 def error(bot, update, error):
