@@ -17,7 +17,22 @@ When you need to leave your venv, just run `deactivate`.  If you don't
 want to use `source venv/bin/activate` you can run `venv/bin/python` and
 `venv/bin/pip` directly.
 
-## Installing dependencies and running
+## Running
+
+You can install and run the project manually, installing a virtual
+environment with Python, or using Docker, which is usually easier.
+
+### Using Docker
+
+Create your docker image:
+
+    docker build -t citadorbot .
+
+Test your bot with docker:
+
+    docker run citadorbot
+
+### Manually
 
 Install dependencies with:
 
@@ -35,13 +50,3 @@ it on a file named `.env` on project root. Its contents should look like
 that:
 
     CITADOR_TOKEN="your bot token"
-
-## Using Docker
-
-Create your docker image:
-
-    docker build -t telegrambot .
-
-Test your bot with docker:
-
-    docker run telegrambot
