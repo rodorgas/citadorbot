@@ -35,3 +35,13 @@ it on a file named `.env` on project root. Its contents should look like
 that:
 
     CITADOR_TOKEN="your bot token"
+
+## Using Docker
+
+Create your docker image:
+
+    docker build -t telegrambot .
+
+Test your bot with docker:
+
+    docker run telegrambot

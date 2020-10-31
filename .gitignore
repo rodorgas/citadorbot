@@ -2,3 +2,5 @@ venv
 *.jpg
 .env
 __pycache__
+.vscode
+
