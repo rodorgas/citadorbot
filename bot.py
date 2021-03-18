@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from telegram.ext import Updater, CommandHandler, MessageHandler, \
-                         Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import User
 from dotenv import load_dotenv
 from validator_collection import checkers
 from io import BytesIO, TextIOWrapper
 
 import logging
-import shlex
-import subprocess
-import random
 import os
 import requests
 import make_image
@@ -20,18 +16,23 @@ TOKEN = os.getenv("CITADOR_TOKEN")
 FAKE_MARK = "Esta é uma falsa citação gerada com /fake_quote"
 
 # Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
 
 logger = logging.getLogger(__name__)
 
 
 def start(bot, update):
     """Send a message when the command /start is issued."""
-    update.message.reply_text('Olá! Use o comando /quote em resposta a uma mensagem ou /fake_quote para criar uma citação fake')
+    update.message.reply_text(
+        "Olá! Use o comando /quote em resposta a uma mensagem ou /fake_quote para criar uma citação fake"
+    )
+
 
 def format_name(name):
     return name[1].upper() + ", " + name[0] if len(name) > 1 else name[0]
+
 
 def get_user_pic(user: User):
     name = user.first_name + " " + user.last_name if user.last_name else user.first_name
@@ -49,16 +50,17 @@ def get_user_pic(user: User):
 
     return (photo, (photo_size.width, photo_size.height), formatted_name)
 
+
 def get_pic_from_url(url, update):
     if not checkers.is_url(url):
-        update.message.reply_text('Use um URL válido')
+        update.message.reply_text("Use um URL válido")
         return None
 
     response = requests.get(url)
-    valid_content_types = ['image/jpeg', 'image/png']
+    valid_content_types = ["image/jpeg", "image/png"]
 
-    if not response.headers['content-type'] in valid_content_types:
-        update.message.reply_text('O URL deve ser de uma imagem jpeg ou png.')
+    if not response.headers["content-type"] in valid_content_types:
+        update.message.reply_text("O URL deve ser de uma imagem jpeg ou png.")
         return None
 
     image = response.content
@@ -75,11 +77,13 @@ def apply_overlay(photo, quote, name, context, fake_quote=False):
 
 
 def make_fake_quote(bot, update):
-    print('fake_quote ' + update.effective_user.username)
-    splitted_text = update['message']['text'].split()
+    print("fake_quote " + update.effective_user.username)
+    splitted_text = update["message"]["text"].split()
 
     if len(splitted_text) < 5:
-        update.message.reply_text('Use /fake_quote <url da imagem> <nome> <sobrenome> <frase>')
+        update.message.reply_text(
+            "Use /fake_quote <url da imagem> <nome> <sobrenome> <frase>"
+        )
         return
 
     url = splitted_text[1]
@@ -91,7 +95,7 @@ def make_fake_quote(bot, update):
     fake_quote = True
     name = [splitted_text[2], splitted_text[3]]
     quote = splitted_text[4:]
-    joined_quote = ' '.join(quote)
+    joined_quote = " ".join(quote)
     formatted_name = format_name(name)
 
     result = apply_overlay(photo[0], joined_quote, formatted_name, None, fake_quote)
@@ -100,27 +104,31 @@ def make_fake_quote(bot, update):
     update.message.reply_photo(photo=fp)
 
 
+
 def make_quote(bot, update):
-    print('quote ' + update.effective_user.username)
-    if len(result := update['message']['text'].split(' ', 1)) > 1 and update['message']['forward_from'] is None:
+    print("quote " + update.effective_user.username)
+    if (
+        len(result := update["message"]["text"].split(" ", 1)) > 1
+        and update["message"]["forward_from"] is None
+    ):
         context = result[-1]
     else:
         context = None
-    if update['message']['forward_from'] is not None:
-        if update['message']['chat']['type'] == 'group':
+    if update["message"]["forward_from"] is not None:
+        if update["message"]["chat"]["type"] == "group":
             return
         user_pic = get_user_pic(update.message.forward_from)
-        quote = update['message']['text']
+        quote = update["message"]["text"]
     else:
-        if update['message']['reply_to_message'] is None:
-            update.message.reply_text('Use /quote em reposta a uma mensagem.')
+        if update["message"]["reply_to_message"] is None:
+            update.message.reply_text("Use /quote em reposta a uma mensagem.")
             return
 
-        if update['message']['reply_to_message']['forward_from'] is not None:
+        if update["message"]["reply_to_message"]["forward_from"] is not None:
             user_pic = get_user_pic(update.message.reply_to_message.forward_from)
         else:
             user_pic = get_user_pic(update.message.reply_to_message.from_user)
-        quote = update['message']['reply_to_message']['text']
+        quote = update["message"]["reply_to_message"]["text"]
 
 
     if len(user_pic) == 3:
@@ -146,11 +154,17 @@ def make_image_quote(
         quote = "“{}”".format(quote)
 
         img_caption = make_image.text_image(quote, padding=25)
-        img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
-        img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
+        img_author = make_image.text_image(
+            name, font_size=int(make_image.FONT_SIZE), padding=25
+        )
+        img_text = make_image.get_concat_vertical(
+            img_caption, img_author, align="right"
+        )
 
         if fake_quote:
-            img_fake = make_image.text_image(FAKE_MARK, font_size=int(make_image.FONT_SIZE * 0.4), padding=25)
+            img_fake = make_image.text_image(
+                FAKE_MARK, font_size=int(make_image.FONT_SIZE * 0.4), padding=25
+            )
             img_text = make_image.get_concat_vertical(img_text, img_fake, align="right")
 
         if context is not None:
@@ -164,7 +178,9 @@ def make_image_quote(
 def make_image_noprofile_quote(quote: str, name: str, context: str):
     quote = '“{}”'.format(quote)
     img_caption = make_image.text_image(quote, padding=25)
-    img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
+    img_author = make_image.text_image(
+        name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25
+    )
     img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
     if context is not None:
             img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
@@ -210,5 +226,5 @@ def main():
     updater.idle()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

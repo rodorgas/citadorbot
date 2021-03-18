@@ -1,7 +1,12 @@
-from PIL import Image, ImageDraw, ImageFont, ImageColor
+from PIL import Image, ImageDraw, ImageFont
 import textwrap
+import emoji
+import math
+import unicodedata
 
-FONT = "Roboto-Regular.ttf"
+FONT_REGULAR = "./fonts/Roboto-Regular.ttf"
+FONT_ITALIC = "./fonts/Roboto-Italic.ttf"
+FONT_EMOJI = "./fonts/NotoColorEmoji.ttf"
 
 FONT_SIZE = 109
 BACKGROUND_COLOR = (0, 0, 0)
@@ -30,9 +35,9 @@ def _resize(im1: Image, im2: Image, resample=Image.BICUBIC, resize_big_image=Tru
     return _im1, _im2
 
 
-def text_image(
+def text_image2(
     text: str,
-    font: str = FONT,
+    font: str = FONT_REGULAR,
     font_size: int = FONT_SIZE,
     font_color: tuple = COLOR,
     background_color: tuple = BACKGROUND_COLOR,
@@ -57,7 +62,7 @@ def text_image(
     text_wrapped = "\n".join(textwrap.wrap(text, width, replace_whitespace=False))
 
     font = ImageFont.truetype(font, font_size, layout_engine=ImageFont.LAYOUT_RAQM)
-    text_size = font.getsize_multiline(text_wrapped, spacing=10)
+    text_size = font.getsize_multiline(text_wrapped, spacing=30)
 
     total_text_width = text_size[0] + 2 * padding
     total_text_height = text_size[1] + 2 * padding
@@ -65,7 +70,12 @@ def text_image(
     img = Image.new("RGB", (total_text_width, total_text_height), background_color)
     draw = ImageDraw.Draw(img)
     draw.multiline_text(
-        (padding, padding), text_wrapped, fill=font_color, font=font, spacing=10
+        (padding, padding),
+        text_wrapped,
+        fill=font_color,
+        font=font,
+        spacing=30,
+        embedded_color=True,
     )
 
     return img
@@ -166,3 +176,122 @@ def get_concat_vertical(
         )
 
     return img_concat
+
+
+def _calculate_text_image_size(text, font, font_emoji):
+    def getsize(c):
+        if c in emoji.UNICODE_EMOJI_ENGLISH:
+            return font_emoji.getlength(c), font_emoji.getsize(c)[1]
+        return font.getlength(c), font.getsize(c)[1]
+
+    max_width = 0
+    max_height = 0
+    break_lines = 0
+
+    for line in text:
+        line_width = 0
+        for c in line:
+            if unicodedata.category(c) in ["Cc", "Mn", "Zs"]:
+                if c == "\n":
+                    break_lines += 1
+                    max_width = max(max_width, line_width)
+                    line_width = 0
+                continue
+            w, h = getsize(c)
+            line_width += w
+            max_height = max(max_height, h)
+
+        max_width = max(max_width, line_width)
+
+    return math.ceil(max_width), math.ceil(max_height), break_lines
+
+
+def _draw_text(
+    img: Image,
+    text: str,
+    font: ImageFont,
+    font_color: str,
+    font_emoji: ImageFont,
+    line_height,
+    padding,
+):
+
+    draw = ImageDraw.Draw(img)
+
+    y = 0
+    for line in text:
+        x = padding
+        for c in line:
+            if unicodedata.category(c) in ["Cc", "Mn"]:
+                if c == "\n":
+                    y += line_height
+                    x = padding
+                continue
+
+            _font = font_emoji if c in emoji.UNICODE_EMOJI_ENGLISH else font
+
+            draw.text(
+                (int(x), y),
+                c,
+                font=_font,
+                fill=font_color,
+                embedded_color=True,
+            )
+            x += _font.getlength(c)
+
+        y += line_height
+
+
+def text_image(
+    text: str,
+    font: str = FONT_REGULAR,
+    font_emoji: str = FONT_EMOJI,
+    font_size: int = FONT_SIZE,
+    font_emoji_size: str = FONT_SIZE,
+    font_color: tuple = COLOR,
+    background_color: tuple = BACKGROUND_COLOR,
+    width: int = WRAP_WIDTH,
+    padding: int = PADDING,
+) -> Image:
+    """Creates an image object which is proportional to the text size.
+    The text is wrapped if exceed the passed width.
+
+    Args:
+        text (str): text to be rendered
+        font (str, optional): path for the text font. Defaults to FONT.
+        font_emoji (str, optional): path for the text font emoji. Defaults to FONT_EMOJI.
+        font_size (int, optional): size of the text. Defaults to FONT_SIZE.
+        font_emoji_size (int, optional): size of the text. Defaults to FONT_SIZE.
+        font_color (tuple, optional): color of the text. Defaults to COLOR.
+        width (int, optional): with at text should be wrapped. Defaults to WRAP_WIDTH.
+        padding (int, optional): padding of the text box. Defaults to PADDING.
+        background_color (tuple, optional): color of the text box. Defaults to BACKGROUND_COLOR.
+
+    Returns:
+        Image: the image object containing the text
+    """
+
+    _text = text.strip()
+    _text = textwrap.wrap(_text, width=width, replace_whitespace=False)
+
+    _font = ImageFont.truetype(font, font_size, layout_engine=ImageFont.LAYOUT_RAQM)
+    _font_emoji = ImageFont.truetype(
+        font_emoji, font_emoji_size, layout_engine=ImageFont.LAYOUT_RAQM
+    )
+
+    max_width, max_height, break_lines = _calculate_text_image_size(
+        _text, _font, _font_emoji
+    )
+
+    img = Image.new(
+        "RGB",
+        (
+            math.ceil((max_width + 2 * padding) + max_width * 0.05),
+            max_height * (len(_text) + break_lines) + 2 * padding,
+        ),
+        background_color,
+    )
+
+    _draw_text(img, _text, _font, font_color, _font_emoji, max_height, padding)
+
+    return img
