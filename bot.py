@@ -5,6 +5,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, \
 from telegram import User
 from dotenv import load_dotenv
 from validator_collection import checkers
+from io import BytesIO, TextIOWrapper
 
 import logging
 import shlex
@@ -60,23 +61,18 @@ def get_pic_from_url(url, update):
         update.message.reply_text('O URL deve ser de uma imagem jpeg ou png.')
         return None
 
-
     image = response.content
 
     return (image, (500, 500))
 
 
-def apply_overlay(n, photo, quote, name, context, fake_quote=False):
-    result = f'result-{n}.jpg'
+def apply_overlay(photo, quote, name, context, fake_quote=False):
 
     if photo:
-        make_image_quote(photo, quote, name, context, result, fake_quote)
-        return result
+        return make_image_quote(photo, quote, name, context, fake_quote)
     else:
-        make_image_noprofile_quote(quote, name, context, result)
-        return result
+        return make_image_noprofile_quote(quote, name, context)
 
-    return result
 
 
 def make_fake_quote(bot, update):
@@ -99,18 +95,11 @@ def make_fake_quote(bot, update):
     joined_quote = ' '.join(quote)
     formatted_name = format_name(name)
 
-    n = random.randint(1, 1000)
-    file_name = False
+    result = apply_overlay(photo[0], joined_quote, formatted_name, None, fake_quote)
 
-    file_name = f'image-{n}.jpg'
-    open(file_name, 'wb').write(photo[0])
-    result = apply_overlay(n, file_name, joined_quote, formatted_name, None, fake_quote)
+    fp = image_to_object_file(result)
+    update.message.reply_photo(photo=fp)
 
-    update.message.reply_photo(photo=open(result, 'rb'))
-
-    if file_name:
-        os.remove(file_name)
-    os.remove(result)
 
 def make_quote(bot, update):
     print('quote ' + update.effective_user.username)
@@ -134,37 +123,29 @@ def make_quote(bot, update):
             user_pic = get_user_pic(update.message.reply_to_message.from_user)
         quote = update['message']['reply_to_message']['text']
 
-    n = random.randint(1, 1000)
-    file_name = False
 
     if len(user_pic) == 3:
-        file_name = f'user-{n}.jpg'
-        open(file_name, 'wb').write(user_pic[0])
         name = user_pic[2]
     else:
         name = user_pic
 
-    result = apply_overlay(n, file_name, quote, name, context)
-
-    update.message.reply_photo(photo=open(result, 'rb'))
-
-    if file_name:
-        os.remove(file_name)
-    os.remove(result)
+    result = apply_overlay(user_pic[0], user_pic[1], quote, name, context)
+    fp = image_to_object_file(result)
+    update.message.reply_photo(photo=fp)
 
 
 def make_image_quote(
-    photo: str,
+    photo: bytearray,
     quote: str,
     name: str,
     context: str,
-    result: str,
     fake_quote: bool=False
     ):
+    with make_image.Image.open(BytesIO(photo)) as user_pic:
+        user_pic = user_pic.convert("L")
 
-    with make_image.Image.open(photo) as img:
         quote = "“{}”".format(quote)
-        img = img.convert("L")
+
         img_caption = make_image.text_image(quote, padding=25)
         img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
         img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
@@ -176,11 +157,12 @@ def make_image_quote(
         if context is not None:
             img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
             img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
-        img_quote = make_image.get_concat_horizontal(img_text, img, resize=img.height < img_text.height)
-        img_quote.save(result)
+        img_quote = make_image.get_concat_horizontal(img_text, user_pic, resize=user_pic.height < img_text.height)
+
+        return img_quote
 
 
-def make_image_noprofile_quote(quote: str, name: str, context: str, result:  str):
+def make_image_noprofile_quote(quote: str, name: str, context: str):
     quote = '“{}”'.format(quote)
     img_caption = make_image.text_image(quote, padding=25)
     img_author = make_image.text_image(name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
@@ -188,7 +170,14 @@ def make_image_noprofile_quote(quote: str, name: str, context: str, result:  str
     if context is not None:
             img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
             img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
-    img_text.save(result)
+    return img_text
+
+
+def image_to_object_file(image: make_image.Image.Image):
+    file_object = BytesIO()
+    image.save(file_object, "JPEG")
+    file_object.seek(0)
+    return file_object
 
 
 def error(bot, update, error):
