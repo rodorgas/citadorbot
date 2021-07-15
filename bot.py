@@ -67,7 +67,6 @@ def get_pic_from_url(url, update):
 
 
 def apply_overlay(photo, quote, name, context, fake_quote=False):
-
     if photo:
         return make_image_quote(photo, quote, name, context, fake_quote)
     else:
@@ -129,7 +128,7 @@ def make_quote(bot, update):
     else:
         name = user_pic
 
-    result = apply_overlay(user_pic[0], user_pic[1], quote, name, context)
+    result = apply_overlay(user_pic[0], quote, name, context)
     fp = image_to_object_file(result)
     update.message.reply_photo(photo=fp)
 
