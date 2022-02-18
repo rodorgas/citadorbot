@@ -17,3 +17,4 @@ tornado==6.0.4
 urllib3==1.26.5
 validator-collection==1.4.2
 pillow==8.3.2
+emoji==1.6.3
