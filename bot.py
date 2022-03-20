@@ -4,7 +4,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import User
 from dotenv import load_dotenv
 from validator_collection import checkers
-from io import BytesIO, TextIOWrapper
+from io import BytesIO
 
 import logging
 import os
@@ -153,9 +153,9 @@ def make_image_quote(
 
         quote = "“{}”".format(quote)
 
-        img_caption = make_image.text_image(quote, padding=25)
+        img_caption = make_image.text_image(quote, font=make_image.FONT_ITALIC, padding=25)
         img_author = make_image.text_image(
-            name, font_size=int(make_image.FONT_SIZE), padding=25
+            name, font_size=int(make_image.FONT_REGULAR_SIZE * 0.5), padding=25
         )
         img_text = make_image.get_concat_vertical(
             img_caption, img_author, align="right"
@@ -163,12 +163,12 @@ def make_image_quote(
 
         if fake_quote:
             img_fake = make_image.text_image(
-                FAKE_MARK, font_size=int(make_image.FONT_SIZE * 0.4), padding=25
+                FAKE_MARK, font_size=int(make_image.FONT_REGULAR_SIZE * 0.4), padding=25
             )
             img_text = make_image.get_concat_vertical(img_text, img_fake, align="right")
 
         if context is not None:
-            img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
+            img_context = make_image.text_image(context, font_size=int(make_image.FONT_REGULAR_SIZE * 0.7), padding=25)
             img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
         img_quote = make_image.get_concat_horizontal(img_text, user_pic, resize=user_pic.height < img_text.height)
 
@@ -177,13 +177,13 @@ def make_image_quote(
 
 def make_image_noprofile_quote(quote: str, name: str, context: str):
     quote = '“{}”'.format(quote)
-    img_caption = make_image.text_image(quote, padding=25)
+    img_caption = make_image.text_image(quote, font=make_image.FONT_ITALIC, padding=25,)
     img_author = make_image.text_image(
-        name, font_size=int(make_image.FONT_SIZE * 0.5), padding=25
+        name, font_size=int(make_image.FONT_REGULAR_SIZE * 0.5), padding=25
     )
     img_text = make_image.get_concat_vertical(img_caption, img_author, align="right")
     if context is not None:
-            img_context = make_image.text_image(context, font_size=int(make_image.FONT_SIZE * 0.5), padding=25)
+            img_context = make_image.text_image(context, font_size=int(make_image.FONT_REGULAR_SIZE * 0.7), padding=25)
             img_text = make_image.get_concat_vertical(img_text, img_context, align="left")
     return img_text
 
