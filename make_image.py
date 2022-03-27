@@ -1,13 +1,12 @@
 import io
-import math
 import textwrap
 import time
 import emoji
 import re
 
-from enum import Enum, auto
+from enum import Enum
 from typing import List
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 from utils import decode_compressed_file
 
 
@@ -18,7 +17,10 @@ def open_image(emoji_bytes: io.BytesIO):
     return img.convert("RGBA")
 
 
-emojis = {emoji_name: open_image(emoji_file) for emoji_name, emoji_file in decode_compressed_file()}
+emojis = {
+    emoji_name: open_image(emoji_file)
+    for emoji_name, emoji_file in decode_compressed_file()
+}
 
 FONT_REGULAR = "./fonts/Roboto-Regular.ttf"
 FONT_ITALIC = "./fonts/Roboto-Italic.ttf"
@@ -27,13 +29,15 @@ FONT_EMOJI = "./fonts/NotoColorEmoji.ttf"
 FONT_EMOJI_SIZE = 109
 FONT_REGULAR_SIZE = 72
 BACKGROUND_COLOR = (0, 0, 0)
-COLOR = (255, 255, 255)
+COLOR = "white"
 WRAP_WIDTH = 30
 PADDING = 10
 MARGIN = 15
 
 
-_UNICODE_EMOJI_REGEX = "|".join(map(re.escape, sorted(emoji.EMOJI_DATA.keys(), key=len, reverse=True)))
+_UNICODE_EMOJI_REGEX = "|".join(
+    map(re.escape, sorted(emoji.EMOJI_DATA.keys(), key=len, reverse=True))
+)
 EMOJI_REGEX = re.compile(f"({_UNICODE_EMOJI_REGEX})")
 
 
@@ -52,18 +56,24 @@ def timeit(method):
     return timed
 
 
-def _resize(im1: Image.Image, im2: Image.Image, resample=Image.BICUBIC, resize_big_image=True):
+def _resize(
+    im1: Image.Image, im2: Image.Image, resample=Image.BICUBIC, resize_big_image=True
+):
     if im1.height == im2.height:
         _im1 = im1
         _im2 = im2
     elif ((im1.height > im2.height) and resize_big_image) or (
         (im1.height < im2.height) and not resize_big_image
     ):
-        _im1 = im1.resize((int(im1.width * im2.height / im1.height), im2.height), resample=resample)
+        _im1 = im1.resize(
+            (int(im1.width * im2.height / im1.height), im2.height), resample=resample
+        )
         _im2 = im2
     else:
         _im1 = im1
-        _im2 = im2.resize((int(im2.width * im1.height / im2.height), im1.height), resample=resample)
+        _im2 = im2.resize(
+            (int(im2.width * im1.height / im2.height), im1.height), resample=resample
+        )
     return _im1, _im2
 
 
@@ -101,14 +111,18 @@ def get_concat_horizontal(
         img_concat.paste(_im1, (margin_padding, margin_padding))
         img_concat.paste(_im2, (_im1.width + 3 * margin, margin_padding))
     if align == "center":
-        img_concat.paste(_im1, (margin_padding, (max_height - _im1.height) // 2 + margin_padding))
+        img_concat.paste(
+            _im1, (margin_padding, (max_height - _im1.height) // 2 + margin_padding)
+        )
         img_concat.paste(
             _im2,
             (_im1.width + 3 * margin, (max_height - _im2.height) // 2 + margin_padding),
         )
     if align == "bottom":
         img_concat.paste(_im1, (margin_padding, height - _im1.height - margin_padding))
-        img_concat.paste(_im2, (_im1.width + 3 * margin, height - _im2.height - margin_padding))
+        img_concat.paste(
+            _im2, (_im1.width + 3 * margin, height - _im2.height - margin_padding)
+        )
 
     return img_concat
 
@@ -153,7 +167,9 @@ def get_concat_vertical(
         )
     if align == "right":
         img_concat.paste(_im1, (width - _im1.width - margin_padding, margin_padding))
-        img_concat.paste(_im2, (width - _im2.width - margin_padding, _im1.height + 3 * margin))
+        img_concat.paste(
+            _im2, (width - _im2.width - margin_padding, _im1.height + 3 * margin)
+        )
 
     return img_concat
 
@@ -190,12 +206,12 @@ def get_text_dimensions(text_string: str, font: ImageFont.FreeTypeFont, mode: st
     return mask.size[0] + offset[0], mask.size[1] + offset[1], mask
 
 
-def remove_variant_selector(rawEmoji):
+def remove_variant_selector(raw_emoji):
     variant_selector_regex = r"\uFE0F"
     zero_width_joiner = chr(0x200D)
-    if zero_width_joiner not in rawEmoji:
-        return re.sub(variant_selector_regex, "", rawEmoji)
-    return rawEmoji
+    if zero_width_joiner not in raw_emoji:
+        return re.sub(variant_selector_regex, "", raw_emoji)
+    return raw_emoji
 
 
 def to_code_point(emoji: str):
@@ -204,22 +220,25 @@ def to_code_point(emoji: str):
 
 
 def parse_and_calculate_text_dimensions(
-    text: str, font: ImageFont.ImageFont, font_emoji: ImageFont.ImageFont, emoji_size: int
+    text: str,
+    font: ImageFont.ImageFont,
+    font_emoji: ImageFont.ImageFont,
+    emoji_size: int,
 ):
     max_width = max_height = break_lines = 0
-    list_text_infos = []
+    parsed_text = []
     for line in text:
         line_width = 0
         for current_text in [t for t in EMOJI_REGEX.split(line) if t]:
 
+            use_default_font = False
             if current_text == TextInfo.types.NEWLINE:
                 current_text_type = TextInfo.types.NEWLINE
                 break_lines += 1
                 max_width = max(max_width, line_width)
                 line_width = 0
 
-            use_default_font = False
-            if emoji.is_emoji(current_text):
+            elif emoji.is_emoji(current_text):
                 mode = TextInfo.modes.RGBA
                 current_text_type = TextInfo.types.EMOJI
                 code_point = to_code_point(current_text)
@@ -229,19 +248,24 @@ def parse_and_calculate_text_dimensions(
                     width, height = mask.size
                     ratio = min(emoji_size / width, emoji_size / height)
                     width, height = int(width * ratio), int(height * ratio)
-                    mask = mask.resize((width , height ), resample=Image.BICUBIC)
+                    mask = mask.resize((width, height), resample=Image.BICUBIC)
                 else:
                     use_default_font = True
                     width, height, mask = get_text_dimensions(
-                        current_text, font_emoji, mode=TextInfo.modes.RGBA.value
+                        current_text,
+                        font_emoji,
+                        mode=TextInfo.modes.RGBA.value,
                     )
-
             else:
                 mode = TextInfo.modes.RGB
                 current_text_type = TextInfo.types.TEXT
-                width, height, mask = get_text_dimensions(current_text, font, mode=TextInfo.modes.RGB.value)
+                width, height, mask = get_text_dimensions(
+                    current_text,
+                    font,
+                    mode=TextInfo.modes.RGB.value,
+                )
 
-            list_text_infos.append(
+            parsed_text.append(
                 TextInfo(
                     current_text,
                     width=width,
@@ -255,10 +279,10 @@ def parse_and_calculate_text_dimensions(
             line_width += width
             max_height = max(max_height, height)
 
-        list_text_infos.append(TextInfo("\n", text_type=TextInfo.types.NEWLINE))
+        parsed_text.append(TextInfo("\n", text_type=TextInfo.types.NEWLINE))
         max_width = max(max_width, line_width)
 
-    return list_text_infos, int(max_width), int(max_height), break_lines
+    return parsed_text, int(max_width), int(max_height), break_lines
 
 
 def _draw_emojis(xy, draw, mask):
@@ -273,9 +297,11 @@ def _draw_text(
     text: List[TextInfo],
     padding: int = 0,
     line_height: int = 0,
+    font_color: str = "white",
 ):
 
     draw = ImageDraw.Draw(img)
+    ink = draw.draw.draw_ink(ImageColor.getcolor(font_color, "RGBA"))
 
     y = x = padding
     for text_info in text:
@@ -291,9 +317,11 @@ def _draw_text(
             if text_info.use_font:
                 _draw_emojis((x, _y), draw, text_info.mask)
             else:
-                img.paste(text_info.mask, (x, _y, x + width, _y + height), mask=text_info.mask)
+                img.paste(
+                    text_info.mask, (x, _y, x + width, _y + height), mask=text_info.mask
+                )
         else:
-            draw.draw.draw_bitmap((x, _y), text_info.mask, draw.ink)
+            draw.draw.draw_bitmap((x, _y), text_info.mask, ink)
 
         x += width
 
@@ -305,6 +333,7 @@ def text_image(
     font_emoji: str = FONT_EMOJI,
     font_size: int = FONT_REGULAR_SIZE,
     font_emoji_size: str = FONT_EMOJI_SIZE,
+    font_color: tuple = COLOR,
     background_color: tuple = BACKGROUND_COLOR,
     width: int = WRAP_WIDTH,
     padding: int = PADDING,
@@ -317,20 +346,23 @@ def text_image(
         text (str): text to be rendered
         font (str, optional): path for the text font. Defaults to FONT.
         font_emoji (str, optional): path for the text font emoji. Defaults to FONT_EMOJI.
-        font_EMOJI_size (int, optional): size of the text. Defaults to FONT_EMOJI_SIZE.
+        font_size (int, optional): size of the text. Defaults to FONT_EMOJI_SIZE.
         font_emoji_size (int, optional): size of the text. Defaults to FONT_EMOJI_SIZE.
-        font_color (tuple, optional): color of the text. Defaults to COLOR.
+        font_color (str, optional): color of the text in string in css-color. Defaults to COLOR.
+        background_color (tuple, optional): color of the text box. Defaults to BACKGROUND_COLOR.
         width (int, optional): with at text should be wrapped. Defaults to WRAP_WIDTH.
         padding (int, optional): padding of the text box. Defaults to PADDING.
-        background_color (tuple, optional): color of the text box. Defaults to BACKGROUND_COLOR.
+        line_height (int, optional): the extra height which the text will be drawn at. Defaults to zero.
 
     Returns:
-        Image: the image object containing the text
+        PILL.Image.Image: the image object containing the text
     """
 
     _text = [
         item
-        for sublist in textwrap.wrap(text.strip(), width=width, replace_whitespace=False)
+        for sublist in textwrap.wrap(
+            text.strip(), width=width, replace_whitespace=False
+        )
         for item in sublist.split("\n")
     ]
 
@@ -342,7 +374,7 @@ def text_image(
     )
 
     (
-        list_text_infos,
+        parsed_text,
         max_width,
         max_height,
         break_lines,
@@ -352,26 +384,28 @@ def text_image(
         "RGB",
         (
             int(max_width + 2 * padding),
-            (max_height + line_height) * (len(_text) + break_lines) + 2 * padding,
+            int((max_height + line_height) * (len(_text) + break_lines) + 2 * padding),
         ),
         background_color,
     )
 
     _draw_text(
         img,
-        list_text_infos,
+        parsed_text,
         line_height=max_height + line_height,
         padding=padding,
+        font_color=font_color,
     )
 
     return img
 
 
 if __name__ == "__main__":
-    # for chunck in chunks(list(emoji.EMOJI_DATA.keys()), 300):
     img = text_image(
-        "a 🧔🏿‍♀️ 👨‍👩‍👧‍👦👨‍👩‍👧‍👦👨‍👧‍👧🌂🥽👓👓🧶🪢🪡🧵🦺👔👘👜🩰👢",
+        "asadsdasd \n\n\n🧔🏿‍♀️ 👨‍👩‍👧‍👦👨‍👩‍👧‍👦👨‍👧‍👧🌂🥽👓👓🧶🪢🪡🧵🦺👔👘👜🩰👢",
         padding=20,
-        line_height=5,
+        line_height=500,
+        font_size=200,
+        font_color="#1b89a1",
     )
     img.show()
